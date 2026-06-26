@@ -63,7 +63,10 @@ function resolvePackageId(plan: GymPackage) {
   return plan.id ?? plan._id ?? plan.name;
 }
 
+
+
 export function PackagesGrid() {
+
   const [packages, setPackages] = useState<GymPackage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -73,7 +76,21 @@ export function PackagesGrid() {
   const [price, setPrice] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [editingId, setEditingId] = useState<number | string | null>(null);
 
+
+  function openEdit(plan: GymPackage) {
+  
+    setEditingId(resolvePackageId(plan));
+  
+    setName(plan.name);
+    setDurationDays(String(plan.duration_days));
+    setPrice(String(plan.price));
+  
+    setOpen(true);
+  }
+
+  
   useEffect(() => {
     let isMounted = true;
 
@@ -117,8 +134,21 @@ export function PackagesGrid() {
         price,
       };
 
-      const createdPackage = await packageService.addPackage(payload);
-      setPackages((currentPackages) => [createdPackage, ...currentPackages]);
+      if (editingId) {
+        await packageService.updatePackage(
+          editingId,
+          payload
+        );
+      } else {
+        await packageService.addPackage(
+          payload
+        );
+      }
+
+      const updatedPackages = await packageService.getPackages();
+
+
+      setPackages(updatedPackages);
       setOpen(false);
       setName("");
       setDurationDays("");
@@ -129,6 +159,25 @@ export function PackagesGrid() {
       setIsSaving(false);
     }
   }
+
+  async function handleDelete(id: string | number) {
+
+    try {
+ 
+       await packageService.deletePackage(id);
+ 
+       setPackages((current) =>
+          current.filter(
+             (pkg) => resolvePackageId(pkg) !== id
+          )
+       );
+ 
+    } catch (error) {
+       console.error(error);
+    }
+ 
+ }
+ 
 
   return (
     <div className="space-y-5">
@@ -142,14 +191,24 @@ export function PackagesGrid() {
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="size-4" />
-              Add Package
-            </Button>
+          <Button
+  onClick={() => {
+    setEditingId(null);
+    setName("");
+    setDurationDays("");
+    setPrice("");
+    setOpen(true);
+  }}
+>
+  <Plus className="size-4" />
+  Add Package
+</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add package</DialogTitle>
+            <DialogTitle>
+  {editingId ? "Edit Package" : "Add Package"}
+</DialogTitle>
               <DialogDescription>
                 Create a new package using the backend add route.
               </DialogDescription>
@@ -198,7 +257,11 @@ export function PackagesGrid() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSaving}>
-                  {isSaving ? "Saving..." : "Save package"}
+                {isSaving
+  ? "Saving..."
+  : editingId
+  ? "Update Package"
+  : "Save Package"}
                 </Button>
               </DialogFooter>
             </form>
@@ -240,8 +303,8 @@ export function PackagesGrid() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Pencil className="size-4" />
+                    <DropdownMenuItem onClick={() => openEdit(plan)}>
+                        <Pencil className="size-4"  />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem variant="destructive">
@@ -266,12 +329,21 @@ export function PackagesGrid() {
                 </p>
               </CardContent>
               <CardFooter className="gap-2">
-                <Button variant="outline" className="flex-1">
-                  Edit
-                </Button>
-                <Button variant="ghost" className="flex-1 text-destructive">
-                  Delete
-                </Button>
+              
+              <Button
+  variant="outline"
+  className="flex-1"
+  onClick={() => openEdit(plan)}
+>
+  Edit
+</Button>
+                <Button
+  variant="ghost"
+  className="flex-1 text-destructive"
+  onClick={() => handleDelete(resolvePackageId(plan))}
+>
+  Delete
+</Button>
               </CardFooter>
             </Card>
           ))}

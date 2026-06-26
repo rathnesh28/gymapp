@@ -79,4 +79,19 @@ export const packageService = {
 
     return "data" in response.data ? response.data.data : response.data;
   },
+  async deletePackage(id: string | number) {
+    const response = await api.delete(`/packages/${id}`);
+    return response.data;
+  },
+  async updatePackage(
+    id: number | string,
+    payload: AddPackagePayload
+  ) {
+    const response = await api.put(
+      `/packages/${id}`,
+      payload
+    );
+  
+    return response.data.data;
+  }
 };

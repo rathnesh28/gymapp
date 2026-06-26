@@ -22,7 +22,7 @@ const navigation = [
   { name: "Members", href: "/members", icon: UsersRound },
   { name: "Add Member", href: "/members/add", icon: PlusCircle },
   { name: "Packages", href: "/packages", icon: Package },
-  { name: "Payments", href: "/dashboard", icon: CreditCard },
+  { name: "Payments", href: "/payments", icon: CreditCard },
 ];
 
 export function Sidebar({ className }: { className?: string }) {
