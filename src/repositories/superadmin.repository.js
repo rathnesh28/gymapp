@@ -8,6 +8,14 @@ const findById = async (id) => {
   return result.rows[0];
 };
 
+const findByEmail = async (email) => {
+  const result = await pool.query(
+    "SELECT id, full_name, email, password_hash, mobile, profile_image, status, last_login, created_at, updated_at FROM superadmins WHERE email = $1",
+    [email]
+  );
+  return result.rows[0];
+};
+
 const updateProfile = async (id, data) => {
   const result = await pool.query(
     `UPDATE superadmins
@@ -31,9 +39,17 @@ const updatePassword = async (id, passwordHash) => {
   return result.rows[0];
 };
 
+const updateLastLogin = async (id) => {
+  const result = await pool.query(
+    "UPDATE superadmins SET last_login = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING id",
+    [id]
+  );
+  return result.rows[0];
+};
+
 const findPasswordById = async (id) => {
   const result = await pool.query("SELECT password_hash FROM superadmins WHERE id = $1", [id]);
   return result.rows[0];
 };
 
-module.exports = { findById, updateProfile, updatePassword, findPasswordById };
+module.exports = { findById, findByEmail, updateProfile, updatePassword, updateLastLogin, findPasswordById };
